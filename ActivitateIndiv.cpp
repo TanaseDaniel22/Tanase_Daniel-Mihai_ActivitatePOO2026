@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 
 using namespace std;
@@ -8,7 +8,6 @@ enum TipCafenea { TO_GO = 1, BISTRO = 2, LOUNGE = 3 };
 
 //Structura clasei si Atributele acesteia
 class Cafenea {
-	;
 private: // protejeaza datele de modificari neautorizate din exterior (principiul encapsularii)
 	const int id; // variabilele "const" trebuie initializate obligatoriu in lista de initializare a constructorului, nu in corpul acestuia
 	static int nrCafenele; // (variabila de clasa) retine numarul de obiecte create din aceasta clasa
@@ -16,8 +15,7 @@ private: // protejeaza datele de modificari neautorizate din exterior (principiu
 	TipCafenea tip; // retine una dintre valorile definite ( TO_GO, BISTRO, LOUNGE )
 	float incasariZilnice;
 	int nrBauturi;
-	float* preturiBauturi;
-};// pointer catre un alocament dinaimc pe Heap. Nu contine tabloul propriu-zis, ci doar adresa de inceput a acestuia. Tabloul este alocat in constructor si eliberat in destructor.
+	float* preturiBauturi // pointer catre un alocament dinaimc pe Heap. Nu contine tabloul propriu-zis, ci doar adresa de inceput a acestuia. Tabloul este alocat in constructor si eliberat in destructor.
 
 	// Constructori
 	// Constructorii sunt metode speciale apelate automat la instantierea unui obiect. Nu au tip returnat (nici macar
@@ -30,11 +28,22 @@ private: // protejeaza datele de modificari neautorizate din exterior (principiu
 		Cafenea() id(++nrCafenele) { // lista de initializare a constructorului, executata inainte de corpul acestuia. 
 			this->denumire = "Cafenea necunoscuta"; // this-> pointer implicit catre obiectul curent care se construieste
 			this->tip = TO_GO;                      // diferentiaza atributele clasei de parametri cu acelasi nume
-			this->incasariZilnice = 0;
+			this->incasariZilnice = 0.0f;
 			this->nrBauturi = 0;
 			this->preturiBauturi = nullptr; // fiind un obiect fara produse, pointerul este setat pe "nullptr" ptr a preveni referentierea
 			// unor adrese de memorie aleatorii (garbage values) care ar putea duce la erori de rulare (runtime errors)
-		}
+			// GETTER STATIC 
+		//	static int getNrCafenele() {
+		//		return nrCafenele;
+		//	}
+		//	// GETTER NORMAL
+		//	int getnrBauturi() const { // const la finalul metodei garanteaza ca apelarea acestei metode nu va modifica starea / atributele obiectului
+		//		return this->nrBauturi;
+		//	}
+
+		//	float* getPreturiBauturi() const {
+		//	}
+		//};
 
 		//Constructorul cu parametri
 Cafenea(string denumire, TipCafenea tip, float incasari, int nrBauturi, float* preturi)
@@ -52,8 +61,7 @@ Cafenea(string denumire, TipCafenea tip, float incasari, int nrBauturi, float* p
 					// Daca nu se face deep copy, atunci ambele obiecte (cel care apeleaza constructorul si cel care este creat) 
 					// vor avea pointeri care indica catre acelasi tablou de preturi. cauzand prabusirea programului la dezalocare
 				}
-			}
-			else {
+			} else {
 				this->preturiBauturi = nullptr; // daca nu exista bauturi, pointerul este setat pe nullptr
 				this->nrBauturi = 0; // si numarul de bauturi este setat la 0
 			}
@@ -65,31 +73,30 @@ Cafenea(string denumire, TipCafenea tip, float incasari, int nrBauturi, float* p
 
 // Destructorul este apelat automat la sfarsitul duratei de viata a obiectului (cand acesta iese din scope sau este sters).
 
-~Cafenea() {
-	if (this->preturiBauturi != nullptr) {
-		delete[] this->preturiBauturi; // elibereaza memoria alocata dinamic pentru tabloul de preturi
-		this->preturiBauturi = nullptr; // seteaza ptr pe nullptr pentru a evita suspendarea lor
+			~Cafenea() {
+				if (this->preturiBauturi != nullptr) {
+				delete[] this->preturiBauturi; // elibereaza memoria alocata dinamic pentru tabloul de preturi
+				this->preturiBauturi = nullptr; // seteaza ptr pe nullptr pentru a evita suspendarea lor
 
-	}
-}
+			}
+		}
 
 // Copy Constructor - este apelat atunci cand un obiect este creat ca o copie a altui obiect.
-Cafenea(const Cafenea& copie) : id(++nrCafenele) {
-	this->denumire = copie.denumire;
-	this->tip = copie.tip;
-	this->incasariZilnice = copie.incasariZilnice;
-	this->nrBauturi = copie.nrBauturi;
+			Cafenea(const Cafenea& copie) : id(++nrCafenele) { // lista de initializare a constructorului, executata inainte de corpul acestuia.
+				this->denumire = copie.denumire; // copiaza denumirea cafenelei din obiectul sursa
+				this->tip = copie.tip; // copiaza tipul cafenelei din obiectul sursa
+				this->incasariZilnice = copie.incasariZilnice; // copiaza incasarile zilnice din obiectul sursa
+				this->nrBauturi = copie.nrBauturi; // copiaza numarul de bauturi din obiectul sursa
 
-	if (copie.preturiBauturi != nullptr && copie.nrBauturi > 0) {
-		this->preturiBauturi = new float[copie.nrBauturi];
-		for (int i = 0; i < copie.nrBauturi; i++) {
-			this->preturiBauturi[i] = copie.preturiBauturi[i];
-		}
-	}
-	else {
-		this->preturiBauturi = nullptr;
-	}
-}
+				if (copie.preturiBauturi != nullptr && copie.nrBauturi > 0) { // verifica daca tabloul de preturi din obiectul sursa nu este nullptr si are elemente
+					this->preturiBauturi = new float[copie.nrBauturi]; // aloca dinamic pe Heap spatiu pentru un tablou de "nrBauturi" elemente de tip float pentru obiectul curent
+					for (int i = 0; i < copie.nrBauturi; i++) { // bucla "for" copiaza fiecare valoare individual din tabloul "preturiBauturi" al obiectului sursa in tabloul propriu de memorie al obiectului curent
+			this->preturiBauturi[i] = copie.preturiBauturi[i]; // copierea valorilor din tabloul preturiBauturi al obiectului sursa in tabloul preturiBauturi al obiectului curent
+					}
+				}	else {
+					this->preturiBauturi = nullptr; // daca tabloul de preturi din obiectul sursa este nullptr sau nu are elemente, pointerul este setat pe nullptr
+				}
+			}
 
 // Operatorul de atribuire (Assignment Operator) - este apelat atunci cand un obiect existent este atribuit altui obiect existent.
 
@@ -122,6 +129,15 @@ Cafenea& operator=(const Cafenea& copie) {
 }
 
 // Encapsulare (Getteri si Setteri) - metode publice care permit accesul controlat la atributele private ale clasei.
+
+static int getNrCafenele() {
+	return nrCafenele;
+}
+
+int getNrBauturi() const { // const la finalul metodei garanteaza ca apelarea acestei metode nu va modifica starea / atributele obiectului
+	return this->nrBauturi;
+}
+
 
 float* getPreturiBauturi() const { // const la finalul metodei garanteaza ca apelarea acestei metode nu va modifica starea / atributele obiectului
 	if (this->preturiBauturi == nullptr || this->nrBauturi == 0) {
@@ -269,4 +285,39 @@ istream& operator>>(istream& in, Cafenea& c) { // permite citirea obiectelor de 
 	}
 
 	return in; // Returneaza stream-ul in pentru a permite operatia in lant (cin >> c1 >> c2;)
+}
+
+// initializarea membrilor statici si executia in main 
+int Cafenea::nrCafenele = 0; // initializarea membrului static nrCafenele la 0, retinand numarul de obiecte create din clasa Cafenea
+
+// Functia main() - punctul de intrare al programului
+int main() {
+	// 1. Se apeleaza constructorul default (nrCafenele devine 1, id devine 1)
+	Cafenea c1;
+
+	// 2. Tablou alocat pe stiva cu 3 valori
+	float preturi[] = { 12.5f, 18.0f, 15.0f };
+	// Se apeleaza constructorul cu parametri (nrCafenele devine 2, id devine 2)
+	Cafenea c2("Coffee Shop", BISTRO, 1200.0f, 3, preturi);
+
+	// 3. Se apeleaza Copy Constructor (nrCafenele devine 3, id devine 3)
+	Cafenea c3 = c2;
+
+	// 4. Se apeleaza operator= pe c1 (care are deja id-ul 1)
+	c1 = c2;
+
+	// 5. Apel operator[]: modifica prima valoare din tabloul alocat dinamic din c2
+	c2[0] = 14.0f;
+
+	// 6. Apel operator+= si pre-incrementare
+	c2 += 300.0f;
+	++c2;
+
+	// 7. Apel operator explicit float (calculeaza media prețurilor)
+	float medie = static_cast<float>(c2);
+
+	// 8. Afisare membru static (va afisa 3)
+	cout << "Total cafenele: " << Cafenea::getNrCafenele() << endl;
+
+	return 0; // La ieșirea din main, se apelează destructorii pentru c3, c2, c1 în ordine inversă creării!
 }
