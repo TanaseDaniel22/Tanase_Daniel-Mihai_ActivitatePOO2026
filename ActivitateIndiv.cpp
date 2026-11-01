@@ -3,25 +3,28 @@
 
 using namespace std;
 
-enum TipCafenea { TO_GO = 1, BISTRO  2, LOUNGE = 3 };
+enum TipCafenea { TO_GO = 1, BISTRO = 2, LOUNGE = 3 };
+
 
 //Structura clasei si Atributele acesteia
-class Cafenea{};
+class Cafenea {
+	;
 private: // protejeaza datele de modificari neautorizate din exterior (principiul encapsularii)
 	const int id; // variabilele "const" trebuie initializate obligatoriu in lista de initializare a constructorului, nu in corpul acestuia
 	static int nrCafenele; // (variabila de clasa) retine numarul de obiecte create din aceasta clasa
-	string denumire; 
+	string denumire;
 	TipCafenea tip; // retine una dintre valorile definite ( TO_GO, BISTRO, LOUNGE )
-	float incasariZilnice; 
+	float incasariZilnice;
 	int nrBauturi;
-	float* preturiBauturi; // pointer catre un alocament dinaimc pe Heap. Nu contine tabloul propriu-zis, ci doar adresa de inceput a acestuia. Tabloul este alocat in constructor si eliberat in destructor.
+	float* preturiBauturi;
+};// pointer catre un alocament dinaimc pe Heap. Nu contine tabloul propriu-zis, ci doar adresa de inceput a acestuia. Tabloul este alocat in constructor si eliberat in destructor.
 
 	// Constructori
 	// Constructorii sunt metode speciale apelate automat la instantierea unui obiect. Nu au tip returnat (nici macar
 	// si au acelasi nume cu clasa. Pot fi supraincarcati (overloaded) pentru a permite initializarea obiectelor in moduri diferite.
 
 	//Constructorul fara parametri (Default constructor) 
-	// este apelat atunci cand obiectul este creat fara a fi initializat cu valori specifice
+	// este apelat atunci cand obiectul este creat fara a fi initializat cu valori specifice;;
 
 	public:
 		Cafenea() id(++nrCafenele) { // lista de initializare a constructorului, executata inainte de corpul acestuia. 
@@ -34,7 +37,7 @@ private: // protejeaza datele de modificari neautorizate din exterior (principiu
 		}
 
 		//Constructorul cu parametri
-		Cafenea(string denumire, TipCafenea tip, float incasari, int nrBauturi, float* preturi)
+Cafenea(string denumire, TipCafenea tip, float incasari, int nrBauturi, float* preturi)
 			: id(++nrCafenele) {
 			this->denumire = denumire;
 			this->tip = tip;
@@ -55,3 +58,91 @@ private: // protejeaza datele de modificari neautorizate din exterior (principiu
 				this->nrBauturi = 0; // si numarul de bauturi este setat la 0
 			}
 		}
+
+// !!! Regula celor 3 (Rule of Three) - daca o clasa are un constructor care aloca memorie dinamica, 
+// trebuie sa aiba si un destructor si un copy constructor pentru a gestiona corect memoria.
+// [clasa cu pointeri] --> necesita manual 1. Destructor, 2. Copy Constructor, 3. Operator =
+
+// Destructorul este apelat automat la sfarsitul duratei de viata a obiectului (cand acesta iese din scope sau este sters).
+
+~Cafenea() {
+	if (this->preturiBauturi != nullptr) {
+		delete[] this->preturiBauturi; // elibereaza memoria alocata dinamic pentru tabloul de preturi
+		this->preturiBauturi = nullptr; // seteaza ptr pe nullptr pentru a evita suspendarea lor
+
+	}
+}
+
+// Copy Constructor - este apelat atunci cand un obiect este creat ca o copie a altui obiect.
+Cafenea(const Cafenea& copie) : id(++nrCafenele) {
+	this->denumire = copie.denumire;
+	this->tip = copie.tip;
+	this->incasariZilnice = copie.incasariZilnice;
+	this->nrBauturi = copie.nrBauturi;
+
+	if (copie.preturiBauturi != nullptr && copie.nrBauturi > 0) {
+		this->preturiBauturi = new float[copie.nrBauturi];
+		for (int i = 0; i < copie.nrBauturi; i++) {
+			this->preturiBauturi[i] = copie.preturiBauturi[i];
+		}
+	}
+	else {
+		this->preturiBauturi = nullptr;
+	}
+}
+
+// Operatorul de atribuire (Assignment Operator) - este apelat atunci cand un obiect existent este atribuit altui obiect existent.
+
+Cafenea& operator=(const Cafenea& copie) {
+	if (this == &copie) {
+		return *this;
+	}
+
+	if (this->preturiBauturi != nullptr) {
+		delete[] this->preturiBauturi;
+		this->preturiBauturi = nullptr;
+	}
+
+	this->denumire = copie.denumire;
+	this->tip = copie.tip;
+	this->incasariZilnice = copie.incasariZilnice;
+	this->nrBauturi = copie.nrBauturi;
+
+	if (copie.preturiBauturi != nullptr && copie.nrBauturi > 0) {
+		this->preturiBauturi = new float[copie.nrBauturi];
+		for (int i = 0; i < copie.nrBauturi; i++) {
+			this->preturiBauturi[i] = copie.preturiBauturi[i];
+		}
+	}
+	else {
+		this->preturiBauturi = nullptr;
+	}
+
+	return *this;
+}
+
+// Encapsulare (Getteri si Setteri) - metode publice care permit accesul controlat la atributele private ale clasei.
+
+float* getPreturiBauturi() const { // const la finalul metodei garanteaza ca apelarea acestei metode nu va modifica starea / atributele obiectului
+	if (this->preturiBauturi == nullptr || this->nrBauturi == 0) {
+		return nullptr;
+	}
+	float* copie = new float[this->nrBauturi];
+	for (int i = 0; i < this->nrBauturi; i++) { // permite copierea valorilor din tabloul preturiBauturi in tabloul copie pentru a preveni modificarea directa a acestuia din exteriorul clasei
+		copie[i] = this->preturiBauturi[i]; // copierea valorilor din tabloul preturiBauturi in tabloul copie pentru a preveni modificarea directa a acestuia din exteriorul clasei
+	}
+	return copie;  // returneaza o copie a tabloului de preturi pentru a preveni modificarea directa a acestuia din exteriorul clasei
+
+}
+void setPreturiBauturi(const float* noiPreturi, int nouNrBauturi) {
+	if (noiPreturi != nullptr && nouNrBauturi > 0) {
+		if (this->preturiBauturi != nullptr) {
+			delete[] this->preturiBauturi;
+		}
+		this->nrBauturi = nouNrBauturi;
+		this->preturiBauturi = new float[nouNrBauturi];
+		for (int i = 0; i < nouNrBauturi; i++) {
+			this->preturiBauturi[i] = noiPreturi[i];
+		}
+	}
+}
