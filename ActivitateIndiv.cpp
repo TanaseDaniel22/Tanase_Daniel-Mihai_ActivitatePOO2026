@@ -134,15 +134,75 @@ float* getPreturiBauturi() const { // const la finalul metodei garanteaza ca ape
 	return copie;  // returneaza o copie a tabloului de preturi pentru a preveni modificarea directa a acestuia din exteriorul clasei
 
 }
-void setPreturiBauturi(const float* noiPreturi, int nouNrBauturi) {
-	if (noiPreturi != nullptr && nouNrBauturi > 0) {
-		if (this->preturiBauturi != nullptr) {
-			delete[] this->preturiBauturi;
+void setPreturiBauturi(const float* noiPreturi, int nouNrBauturi) { // permite setarea unui nou tablou de preturi pentru obiectul curent, inlocuind vechiul tablou daca exista
+	if (noiPreturi != nullptr && nouNrBauturi > 0) { // verifica daca tabloul de preturi transmis ca parametru nu este nullptr si are un numar valid de elemente
+		if (this->preturiBauturi != nullptr) { // daca tabloul de preturi existent nu este nullptr, elibereaza memoria alocata anterior pentru a preveni scurgerile de memorie
+			delete[] this->preturiBauturi; // elibereaza memoria alocata anterior pentru a preveni scurgerile de memorie
 		}
-		this->nrBauturi = nouNrBauturi;
-		this->preturiBauturi = new float[nouNrBauturi];
-		for (int i = 0; i < nouNrBauturi; i++) {
-			this->preturiBauturi[i] = noiPreturi[i];
+		this->nrBauturi = nouNrBauturi; // seteaza numarul de bauturi la noul numar transmis ca parametru
+		this->preturiBauturi = new float[nouNrBauturi]; // aloca dinamic un nou tablou de preturi cu dimensiunea noului numar de bauturi
+		for (int i = 0; i < nouNrBauturi; i++) { // copiaza valorile din tabloul de preturi transmis ca parametru in noul tablou al obiectului curent
+			this->preturiBauturi[i] = noiPreturi[i]; // copierea valorilor din tabloul de preturi transmis ca parametru in noul tablou al obiectului curent
 		}
 	}
+}
+
+// Operatorul index []
+// permite accesul la elementele tabloului de preturi prin intermediul unui index, similar cu un tablou normal
+
+float& operator[](int index) {
+	if (index >= 0 && index < this->nrBauturi && this->preturiBauturi != nullptr) { // verifica daca indexul este valid si daca tabloul de preturi nu este nullptr
+		return this->preturiBauturi[index]; // returneaza referinta la elementul de la indexul specificat, permitand modificarea acestuia
+	}
+	throw out_of_range("Index invalid sau tabloul de preturi este null."); // arunca o exceptie daca indexul este invalid sau tabloul de preturi este nullptr
+}
+
+// Operatorul +=
+// modifica obiectul curent adaugand suma la incasari si returneaza *this prin referinta ptr apeluri de tipul (c1 += suma += suma2) etc.
+
+Cafenea& operator+=(float suma) {
+	if (suma > 0) { // verifica daca suma de adaugat }
+		this->incasariZilnice += suma; // adauga suma la incasarile zilnice ale cafenelei
+	}
+	return *this;
+}
+
+// Operatorul negatie !
+// permite verificarea daca incasarile zilnice sunt pozitive sau nu, returnand true daca sunt pozitive si false altfel
+
+bool operator!() const {
+	return this->nrBauturi == 0 || this->preturiBauturi == nullptr; // returneaza true daca meniul este gol. Permite scrierea codului intuitiv : 
+																	// if (!cafenea) { cout << "Meniul este gol!";
+}
+
+// Operatorii de incrementare (++) 
+// permit incrementarea incasarilor zilnice ale cafenelei, fie prin preincrementare (++cafenea), fie prin postincrementare (cafenea++)
+
+// 1. Pre-incrementare (++ob) - modifica obiectul curent si returneaza referinta la acesta
+Cafenea& operator++() {
+	this->incasariZilnice += 10.0f;
+	return *this;
+}
+
+// 2. Post-incrementare (ob++) - modifica obiectul curent, dar returneaza o copie a starii anterioare a acestuia
+Cafenea operator++(int) {
+	Cafenea copie = *this; // creeaza o copie a obiectului curent
+	this->incasariZilnice += 10.0f; // incrementeaza incasarile zilnice ale cafenelei
+	return copie; // returneaza copia anterioara a obiectului
+}
+
+// Operatorul de comparare < si Cast Explicit
+bool operator<(const Cafenea& c) const { // compara obiectul curent cu alt obiect de tip Cafenea, returnand true daca obiectul curent are mai putine bauturi decat cel comparat
+	return this->nrBauturi < c.nrBauturi; // returneaza true daca obiectul curent are mai putine bauturi decat cel comparat, false altfel
+}
+
+explicit operator float() const { // returneaza suma incasarilor zilnice ale cafenelei, permitand conversia explicita a obiectului in float
+	if (this->nrBauturi == 0 || this->preturiBauturi == nullptr) { // verifica daca tabloul de preturi este nullptr sau daca numarul de bauturi este 0, caz in care returneaza 0.0f
+		return 0.0f; // returneaza 0.0f daca tabloul de preturi este nullptr sau daca numarul de bauturi este 0
+	}
+	float suma = 0; // calculeaza suma preturilor bauturilor pentru a returna media acestora
+	for (int i = 0; i < this->nrBauturi; i++) { // bucla pentru a calcula suma preturilor bauturilor
+		suma += this->preturiBauturi[i]; // adauga pretul fiecarei bauturi la suma totala
+	}
+	return suma / this->nrBauturi; // returneaza media preturilor bauturilor
 }
