@@ -206,3 +206,67 @@ explicit operator float() const { // returneaza suma incasarilor zilnice ale caf
 	}
 	return suma / this->nrBauturi; // returneaza media preturilor bauturilor
 }
+
+
+
+////////////////////////////////
+
+// Prietenia in C++ (friend) si Operatori Stream (In/Out)
+// deoarece operatorul << are in stanga sa un stream (std::cout), iar in dreapta obiectul "Cafenea", 
+//acesta nu poate fi membru al clasei, deoarece primul parametru trebuie sa fie un obiect de tip stream.
+
+friend ostream& operator<<(ostream& out, const Cafenea& c);
+friend istream& operator>>(istream& in, Cafenea& c);
+};
+
+// friend : ofera acestei functii externe acces direct la membrii privati (private:) ai clasei, 
+// permitand afisarea si citirea obiectelor Cafenea fara a expune atributele private in mod public.
+
+ostream& operator<<(ostream& out, const Cafenea& c) { // supraincarca operatorul << pentru a permite afisarea obiectelor de tip Cafenea in mod intuitiv (cout << c1;)
+	out << "\n[ID " << c.id << "] Cafeneaua '" << c.denumire << "'"; // afiseaza ID-ul si denumirea cafenelei
+	out << " | Tip: " << (c.tip == TO_GO ? "To Go" : (c.tip == BISTRO ? "Bistro" : "Lounge"));		// afiseaza tipul cafenelei in functie de valoarea enum-ului TipCafenea
+	out << " | Incasari: " << c.incasariZilnice << " lei"; // afiseaza incasarile zilnice ale cafenelei
+	out << "\n  Meniu (" << c.nrBauturi << " bauturi): "; // afiseaza numarul de bauturi din meniu
+	if (c.preturiBauturi != nullptr && c.nrBauturi > 0) { // afiseaza preturile bauturilor daca tabloul de preturi nu este nullptr si numarul de bauturi este mai mare ca 0
+		for (int i = 0; i < c.nrBauturi; i++) { // bucla pentru a afisa preturile bauturilor
+			out << c.preturiBauturi[i] << (i == c.nrBauturi - 1 ? " lei." : " lei, "); // afiseaza pretul fiecarei bauturi, adaugand un punct la finalul ultimului pret si o virgula intre celelalte
+		}
+	}
+	else { // daca tabloul de preturi este nullptr sau numarul de bauturi este 0, afiseaza un mesaj corespunzator
+		out << "Fara produse.";
+	}
+	out << endl;
+	return out; // Returneaza stream-ul out pentru a permite operatia in lant (cout << c1 << c2;)
+}
+
+istream& operator>>(istream& in, Cafenea& c) { // permite citirea obiectelor de tip Cafenea in mod intuitiv (cin >> c1;)
+	cout << "Denumire: "; // afiseaza mesajul pentru a cere denumirea cafenelei
+	in >> c.denumire; // citeste denumirea cafenelei de la utilizator
+	cout << "Tip (1-TO_GO, 2-BISTRO, 3-LOUNGE): "; // afiseaza mesajul pentru a cere tipul cafenelei
+	int tempTip; // citeste tipul cafenelei ca intreg pentru a-l converti ulterior in TipCafenea
+	in >> tempTip; // citeste tipul cafenelei de la utilizator 
+	c.tip = static_cast<TipCafenea>(tempTip); // converteste intregul citit in TipCafenea folosind static_cast pentru a asigura tipul corect al enum-ului
+	cout << "Incasari zilnice: "; // afiseaza mesajul pentru a cere incasarile zilnice ale cafenelei
+	in >> c.incasariZilnice; // citeste incasarile zilnice ale cafenelei de la utilizator 
+
+	cout << "Numar bauturi: "; // afiseaza mesajul pentru a cere numarul de bauturi din meniu
+	in >> c.nrBauturi; // citeste numarul de bauturi din meniu de la utilizator 
+
+	// Curatam memoria existenta inainte de citirea unui nou tablou
+	if (c.preturiBauturi != nullptr) {
+		delete[] c.preturiBauturi;
+	}
+
+	if (c.nrBauturi > 0) { // daca numarul de bauturi este mai mare ca 0, aloca un nou tablou pentru preturi si citeste valorile acestora de la utilizator
+		c.preturiBauturi = new float[c.nrBauturi]; // aloca dinamic un tablou de preturi pentru bauturi
+		for (int i = 0; i < c.nrBauturi; i++) { // bucla pentru a citi preturile bauturilor de la utilizator
+			cout << "Pret bautura [" << i << "]: "; // afiseaza mesajul pentru a cere pretul fiecarei bauturi
+			in >> c.preturiBauturi[i]; // citeste pretul fiecarei bauturi de la utilizator
+		} 
+	}
+	else { // daca numarul de bauturi este 0 sau mai mic, seteaza pointerul preturiBauturi pe nullptr pentru a preveni referentierea unor adrese de memorie invalide
+		c.preturiBauturi = nullptr;
+	}
+
+	return in; // Returneaza stream-ul in pentru a permite operatia in lant (cin >> c1 >> c2;)
+}
